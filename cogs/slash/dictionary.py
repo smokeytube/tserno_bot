@@ -73,11 +73,13 @@ class Dictionary(commands.Cog, name="dictionary"):
                     linearr = line.split(" - ")
                     if word == linearr[1]:
                         definition = line
+                        break
             elif eort == "t":
                 for line in f:
                     linearr = line.split(" - ")
                     if word == linearr[0]:
                         definition = line
+                        break
             else:
                 await interaction.send("Please select 'E' or 'T' for the second option.")
             
@@ -85,6 +87,68 @@ class Dictionary(commands.Cog, name="dictionary"):
                 await interaction.send(f"'{word}' not found.")
             else:
                 await interaction.send(definition)
+
+    @commands.slash_command(
+        name="getwordsfromlist",
+        description="Search an English word's translation w/ by list, or vice versa. Write each word separated with ';'.",
+        options=[
+            Option(
+                name="words",
+                description="List of words seperated by semicolons.",
+                type=OptionType.string,
+                required=True
+            ),
+            Option(
+                name="e_or_t",
+                description="Is the list English or Tšernoian? (Input 'E' or 'T'.)",
+                type=OptionType.string,
+                required=True
+            )
+        ],
+    )
+    async def getwordsfromlist(self, interaction):
+        i = interaction.options
+        words = i['words'].lower().split(";")
+        eort = i['e_or_t'].lower()
+
+        notfoundwords = ""
+        with open(self.f, 'r', encoding="utf-8") as f:
+            f = f.readlines()
+            definitions = ""
+            if eort == "e":
+                for word in words:
+                    found = False
+                    for line in f:
+                        linearr = line.split(" - ")
+                        if word == linearr[1]:
+                            definitions += line
+                            found = True
+                            break
+                    if not found:
+                        notfoundwords += word + "\n"
+
+            elif eort == "t":
+                for word in words:
+                    found = False
+                    for line in f:
+                        linearr = line.split(" - ")
+                        if word == linearr[0]:
+                            definitions += line
+                            found = True
+                            break
+                    if not found:
+                        notfoundwords += word + "\n"
+            else:
+                await interaction.send("Please select 'E' or 'T' for the second option.")
+                return
+            
+            if definitions == "":
+                await interaction.send(f"No words found.")
+            else:
+                if notfoundwords == "":
+                    await interaction.send(f"```{definitions}```")
+                else:
+                    await interaction.send(f"```{definitions}```\n\nSome words were not found:\n```{notfoundwords}```")
 
 
     @commands.slash_command(
